@@ -1,20 +1,41 @@
 import itertools as it
 import numpy as np
 
-def tsp_dyn_progr(n_cities, city_coordinates):
+def tsp_dyn_progr(distances):
 
-    # Construct the matrix of distances between any pair of cities
-    dist = distances_from_coordinates(n_cities, city_coordinates)
+    n_cities = distances.shape[0]
 
     # Initialize the list a[subset_size][i_subset][j] which will hold, for each possible subset of nodes
     # (all including node 0), the length of the shortest path from node 0 to node j, including all nodes
     # in the subset exactly once in between node 0 and node j.
-    a = [ np.ones()*np.inf for x in range(2**n_cities)]
+    # a = [[] for x in range(2**n_cities)]
+    a = [None] * (2**n_cities)
 
-    for subset_size in range(1, n_cities+1):
 
+    # Initialize a
+    # For the empty subset (with only node 0), the distance form node 0 to itself is 0
+    a[0] = np.zeros(1, dtype=float)
+    # For subsets with a single node in addition to node 0, the distance is the distance between it and node 0
+    subset_size = 1
+    subsets = it.combinations(range(1, n_cities), subset_size)
+    for subset in subsets:
+
+        # get index of element in a for this subset
+        i_subset = idx(subset)
+
+        # initialize a for this subset (one entry for each j)
+        a[i_subset] = np.ones(subset_size, dtype=float) * np.inf
+
+        # For each city j in the subset, determine a[i_subset, j]
+        for i_j, j in enumerate(subset):
+            # Determine the index in a of the subset equal to the current one, minus city j
+            a[i_subset][i_j] = distances[0,j]
+
+    for subset_size in range(2, n_cities):
+
+        print("Working on subsets of size " + str(subset_size))
         # Determine number of subsets of the current size
-        subsets = it.combinations(range(n_cities), subset_size)
+        subsets = it.combinations(range(1,n_cities), subset_size)
 
         # For each possible subset, determine the length of the shortest path
         for subset in subsets:
@@ -22,16 +43,24 @@ def tsp_dyn_progr(n_cities, city_coordinates):
             # get index of element in a for this subset
             i_subset = idx(subset)
 
-            # For each city in the subset, determine a[i_subset, j]
-            for j in subset:
+            # initialize a for this subset (one entry for each j)
+            a[i_subset] = np.ones(subset_size, dtype=float) * np.inf
+
+            # For each city j in the subset, determine a[i_subset, j]
+            for i_j, j in enumerate(subset):
 
                 # Determine the index in a of the subset equal to the current one, minus city j
                 i_subset_without_j = idx(subset, [j])
 
-                options = [a[i_subset_without_j][k] + dist[k, j] for k in subset  if k != j]
-                a[i_subset][j] = min(options + [np.inf])
+                #
+                options = [a[i_subset_without_j][i_k] + distances[subset(i_k), j] for i_k in range(subset_size) if i_k != i_j]
+                a[i_subset][i_j] = min(options + [np.inf])
 
-    len_shortest_path = 777777777
+    # Determine the shortest tour length, similarly to the last step in the loop above but now to return
+    # back to city # 1
+    options = [a[-1][k] + dist[k, 0] for k in range(1,n_cities)]
+    len_shortest_path = min(options + [np.inf])
+
     return len_shortest_path
 
 
