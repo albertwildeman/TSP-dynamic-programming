@@ -7,8 +7,8 @@ import numpy as np
 
 filename = "tsp"
 
-test_version = True
-n_cities_test = 3
+test_version = False
+n_cities_test = 4
 
 npy_version_exists = os.path.isfile(filename + ".npy")
 if not npy_version_exists:

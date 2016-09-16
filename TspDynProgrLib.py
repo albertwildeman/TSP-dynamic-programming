@@ -9,7 +9,7 @@ def tsp_dyn_progr(distances):
     # (all including node 0), the length of the shortest path from node 0 to node j, including all nodes
     # in the subset exactly once in between node 0 and node j.
     # a = [[] for x in range(2**n_cities)]
-    a = [None] * (2**n_cities)
+    a = [None] * (2**(n_cities-1))
 
     # Initialize a
     # For the empty subset (with only node 0), the distance form node 0 to itself is 0
@@ -57,7 +57,7 @@ def tsp_dyn_progr(distances):
                 for i_k, k in enumerate(subset_without_j):
                     options[i_k] = a[i_subset_without_j][i_k] + distances[k, j]
 
-                a[i_subset][i_j] = min(options + [np.inf])
+                a[i_subset][i_j] = min(options)
 
     # Determine the shortest tour length, similarly to the last step in the loop above but now to return
     # back to city # 1
@@ -67,14 +67,13 @@ def tsp_dyn_progr(distances):
         options[i_k] = a[i_subset_with_all_cities_except_0][i_k] + distances[k, 0]
 
     # options = [a[-1][k] + dist[k, 0] for k in range(1,n_cities)]
-    len_shortest_path = min(options + [np.inf])
+    len_shortest_path = min(options)
 
     return len_shortest_path
 
 
 def distances_from_coordinates(n_cities, coord):
     # Calculates the (Euclidian) distance between two cities
-    distances = np.zeros((n_cities, n_cities), dtype=float)
 
     # For every pair of cities i and j, get the distance
     distances = np.array( [[
@@ -84,14 +83,13 @@ def distances_from_coordinates(n_cities, coord):
     return distances
 
 
-def idx(subset, excluded=[]):
+def idx(subset):
 
     # Returns the 1-dimensional index of a subset or arbitrary size, excluding elements listed in without
     index = 0
 
     # Index has 1 bit for each node. If the node is present in the subset, turn on the corresponding bit.
-    subset_after_deletion = [i for i in subset if i not in excluded]
-    for i in subset_after_deletion:
-        index += 1 << i
+    for i in subset:
+        index += 1 << (i-1)
 
     return index
